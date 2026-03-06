@@ -28,10 +28,10 @@ const Navbar = () => {
   const {user } = useUser()
 
   return (
-    <header className="w-full fixed bg(--bg-primary) z-40 ">
+    <header className="w-full fixed bg-(--bg-primary) z-50 overflow-hidden ">
       <div className="wrapper py-4 navbar-height flex justify-between items-center">
         <Link href="/" className="flex gap-0.5 items-center">
-          <Image alt="kittden logo" src={KittDen} width={150} height={26} />
+          <Image alt="kittden logo" src={KittDen} width={150} height={26}  />
         </Link>
         <nav className="w-fit flex items-center gap-7.5">
           {navItems.map((item) => {

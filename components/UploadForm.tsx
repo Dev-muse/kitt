@@ -58,7 +58,7 @@ const UploadForm = () => {
     <>
       {/* Loading Overlay */}
       {isSubmitting && <LoadingOverlay />}
-    
+
       <div className="new-book-wrapper">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -101,7 +101,10 @@ const UploadForm = () => {
                     <div
                       className="upload-dropzone"
                       onClick={() => pdfInputRef.current?.click()}
-                    >
+                     
+
+                      role="button"
+                     >
                       <Upload className="upload-dropzone-icon" />
                       <p className="upload-dropzone-text">Click to upload PDF</p>
                       <p className="upload-dropzone-hint">PDF file (max 50MB)</p>
@@ -132,7 +135,7 @@ const UploadForm = () => {
                   {coverImage ? (
                     <div className="upload-dropzone upload-dropzone-uploaded flex-row !h-auto !p-4 gap-3">
                       <ImagePlus className="w-6 h-6 text-[#663820]" />
-                      <span className="upload-dropzone-text !text-[#663820] flex-1 text-left truncate">
+                      <span className="upload-dropzone-text text-[#663820] flex-1 text-left truncate">
                         {coverImage.name}
                       </span>
                       <button
@@ -142,7 +145,12 @@ const UploadForm = () => {
                           e.stopPropagation();
                           field.onChange(undefined);
                           if (coverInputRef.current) coverInputRef.current.value = "";
+
                         }}
+                      
+
+                      role="button"
+                
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -301,7 +309,7 @@ const UploadForm = () => {
                   Processing...
                 </span>
               ) : (
-                "Begin Synthesis"
+                "Start Process"
               )}
             </button>
           </form>
