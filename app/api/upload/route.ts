@@ -4,8 +4,20 @@ import { handleUpload, HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
   try {
+    const body = (await request.json()) as HandleUploadBody;
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+    });
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+  }
+}
     const jsonResponse = await handleUpload({
       body,
       request,
