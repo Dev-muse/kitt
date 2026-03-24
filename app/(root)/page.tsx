@@ -6,7 +6,6 @@ import { sampleBooks } from "@/lib/constants";
 const Home = async () => {
   const bookResults = await getAllBooks();
   const books = bookResults.success ? bookResults.data ??[] : [];
-  console.log("books", books);
   return (
     <main className="wrapper container ">
       <HeroSection />
