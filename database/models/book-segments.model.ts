@@ -1,0 +1,35 @@
+import { IBookSegment } from "@/types";
+import { Book } from "lucide-react";
+import { model, models, Schema } from "mongoose";
+
+// used IBookSegment to sync the application types with database models
+const BookSegmentSchema = new Schema<IBookSegment>(
+  {
+    clerkId: { type: String, required: true },
+    bookId: {
+      type: Schema.Types.ObjectId,
+      ref: "Book",
+      required: true,
+      index: true,
+    },
+    content: { type: String, required: true },
+    segmentIndex: { type: Number, required: true, index: true },
+    pageNumber: { type: Number, index: true },
+    wordCount: { type: Number, required: true },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// for efficient querying of segments by bookId and segmentIndex also bookId and pageNumber
+BookSegmentSchema.index({ bookId: 1, segmentIndex: 1 }, { unique: true });
+BookSegmentSchema.index({ bookId: 1, pageNumber: 1 });
+
+// indexing by content
+BookSegmentSchema.index({ bookId:1, content: "text" });
+
+const BookSegment =
+  models.BookSegment || model<IBookSegment>("BookSegment", BookSegmentSchema);
+
+export default BookSegment;

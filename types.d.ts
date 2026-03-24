@@ -25,8 +25,7 @@ export interface IBook extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-
-export interface IBookSegment extends Document {
+ export interface IBookSegment extends Document {
     clerkId: string;
     bookId: Types.ObjectId;
     content: string;
@@ -56,7 +55,6 @@ export interface IVoiceSession extends Document {
 export type BookUploadFormValues = z.infer<typeof UploadSchema>;
 
 export interface CreateBook {
-    clerkId: string;
     title: string;
     author: string;
     persona?: string;
