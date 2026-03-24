@@ -25,8 +25,7 @@ export interface IBook extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
-
-export interface IBookSegment extends Document {
+ export interface IBookSegment extends Document {
     clerkId: string;
     bookId: Types.ObjectId;
     content: string;

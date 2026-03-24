@@ -5,7 +5,7 @@ import { Steps } from "@/lib/constants";
 
 const HeroSection = () => {
   return (
-    <section className="wrapper pt-28 mb-10 md:mb-16">
+    <section className="wrapper pt-6 mb-10 md:mb-16">
       <div className="library-hero-card">
         <div className="library-hero-content">
           {/* Left – heading, description, CTA */}
