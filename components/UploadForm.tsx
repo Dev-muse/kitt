@@ -105,7 +105,6 @@ const UploadForm = () => {
       }
 
       const book = await createBook({
-        clerkId: userId,
         title: data.title,
         author: data.author,
         persona: data.voice,
@@ -125,7 +124,6 @@ const UploadForm = () => {
       }
       const segments = await saveBookSegments(
         book.data._id,
-        userId,
         parsedPDF.content,
       );
 

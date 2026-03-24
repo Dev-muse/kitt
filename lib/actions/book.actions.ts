@@ -5,9 +5,15 @@ import Book from "@/database/models/books.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
 import { generateSlug, serializeData } from "../utils";
+import { auth } from "@clerk/nextjs/server";
 
 export const createBook = async (data: CreateBook) => {
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, error: "Unauthorized: User not authenticated" };
+    }
+
     await connectToDatabase();
     const slug = generateSlug(data.title);
     const existingBook = await Book.findOne({ slug }).lean();
@@ -22,7 +28,12 @@ export const createBook = async (data: CreateBook) => {
 
     // TODO: Check subscription limits before creating a book
 
-    const book = await Book.create({ ...data, slug, totalSegments: 0 });
+    const book = await Book.create({
+      ...data,
+      clerkId: userId,
+      slug,
+      totalSegments: 0,
+    });
     return {
       success: true,
       data: serializeData(book),
@@ -41,18 +52,31 @@ export const createBook = async (data: CreateBook) => {
 
 export const saveBookSegments = async (
   bookId: string,
-  clerkId: string,
   segments: TextSegment[],
 ) => {
+  const { userId } = await auth();
+  if (!userId) {
+    return { success: false, error: "Unauthorized: User not authenticated" };
+  }
+
   try {
     await connectToDatabase();
+
+    // Ownership check: verify the book exists and belongs to the authenticated user
+    const book = await Book.findById(bookId).lean();
+    if (!book) {
+      return { success: false, error: "Book not found" };
+    }
+    if (book.clerkId !== userId) {
+      return { success: false, error: "Forbidden: You do not own this book" };
+    }
 
     console.log("Saving book segement...");
 
     const segementsToInsert = segments.map(
       ({ text, segmentIndex, pageNumber, wordCount }) => ({
         bookId,
-        clerkId,
+        clerkId: userId,
         content: text,
         segmentIndex,
         pageNumber,
@@ -77,11 +101,20 @@ export const saveBookSegments = async (
 
     console.error("Error saving book segements", message);
 
-    await BookSegment.deleteMany({ bookId });
-    await Book.findByIdAndDelete(bookId);
-    console.log(
-      "Deleted book segements and book due to inability to save book segement",
-    );
+    // Rollback: only delete segments and book owned by the authenticated user
+    try {
+      const book = await Book.findById(bookId).lean();
+      if (book && book.clerkId === userId) {
+        await BookSegment.deleteMany({ bookId });
+        await Book.findByIdAndDelete(bookId);
+        console.log(
+          "Deleted book segements and book due to inability to save book segement",
+        );
+      }
+    } catch (rollbackError) {
+      console.error("Rollback failed", rollbackError);
+    }
+
     return {
       success: false,
       error: message,
