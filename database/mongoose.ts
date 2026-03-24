@@ -32,13 +32,11 @@ export const connectToDatabase = async () => {
 
   try {
     cached.conn = await cached.promise;
+    console.info("Connected to MongoDB");
     return cached.conn;
   } catch (error) {
     cached.promise = null;
     console.error("Failed to connect to MongoDB:", error);
     throw error;
   }
-
-  console.info("New connection established with MongoDB");
-  return cached.conn;
 };
