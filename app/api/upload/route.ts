@@ -20,7 +20,6 @@ export async function POST(request: Request): Promise<NextResponse> {
             "image/jpg",
             "image/webp",
           ],
-          userId,
           addRandomSuffix: true,
           maximumSizeInBytes: MAX_FILE_SIZE,
           tokenPayload: JSON.stringify({ userId }),
