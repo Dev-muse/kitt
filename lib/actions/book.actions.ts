@@ -1,12 +1,10 @@
 "use server";
 
+import BookSegment from "@/database/models/book-segments.model";
+import Book from "@/database/models/books.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
 import { generateSlug, serializeData } from "../utils";
-import Book from "@/database/models/books.model";
-import BookSegment from "@/database/models/book-segments.model";
-import { success } from "zod";
-import { exists } from "fs";
 
 export const createBook = async (data: CreateBook) => {
   try {
@@ -30,10 +28,13 @@ export const createBook = async (data: CreateBook) => {
       data: serializeData(book),
     };
   } catch (error) {
-    console.log("error creating book", error);
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
+    console.error("Error creating book", message);
     return {
       success: false,
-      error: error,
+      error: message,
     };
   }
 };
@@ -71,7 +72,10 @@ export const saveBookSegments = async (
       data: { segementCreated: segments.length },
     };
   } catch (error) {
-    console.error("Error saving book segments", error);
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
+    console.error("Error saving book segements", message);
 
     await BookSegment.deleteMany({ bookId });
     await Book.findByIdAndDelete(bookId);
@@ -80,7 +84,7 @@ export const saveBookSegments = async (
     );
     return {
       success: false,
-      error: error,
+      error: message,
     };
   }
 };
@@ -100,11 +104,12 @@ export const checkBookExists = async (title: string) => {
       exists: false,
     };
   } catch (error) {
-    console.error("Error checking if book exists", error);
-
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Error checking if book exists", message);
     return {
       success: false,
-      error,
+      error: message,
     };
   }
 };
@@ -120,11 +125,13 @@ export const getAllBooks = async () => {
       data: serializeData(books),
     };
   } catch (error) {
-    console.error("Error getting all books", error);
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Error getting all books", message);
 
     return {
       success: false,
-      error,
+      error: message,
     };
   }
 };
