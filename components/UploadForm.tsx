@@ -1,32 +1,30 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FileText, ImagePlus, Loader2, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Upload,
-  ImagePlus,
-  X,
-  FileText,
-  Loader2,
-} from "lucide-react";
 
+import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import {
-  Form,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+  checkBookExists,
+  createBook,
+  saveBookSegments,
+} from "@/lib/actions/book.actions";
+import { DEFAULT_VOICE, voiceCategories, voiceOptions } from "@/lib/constants";
 import { UploadSchema } from "@/lib/zod";
-import {
-  voiceOptions,
-  voiceCategories,
-  DEFAULT_VOICE,
-} from "@/lib/constants";
 import type { BookUploadFormValues } from "@/types";
+import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { parsePDFFile } from "@/lib/utils";
+import { upload } from "@vercel/blob/client";
 
 const UploadForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { userId } = useAuth();
+  const router = useRouter();
+
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,6 +33,8 @@ const UploadForm = () => {
     defaultValues: {
       title: "",
       author: "",
+      pdf: undefined,
+      coverImage: undefined,
       voice: DEFAULT_VOICE,
     },
   });
@@ -43,12 +43,100 @@ const UploadForm = () => {
   const coverImage = form.watch("coverImage");
 
   const onSubmit = async (data: BookUploadFormValues) => {
+    if (!userId) {
+      return toast.error("Please login to upload a book");
+    }
+
     setIsSubmitting(true);
+
+    //TODO: use posthog to track user actions when uploading book
+
     try {
       // TODO: Implement actual upload logic
-      console.log("Form submitted:", data);
+
+      const existsCheck = await checkBookExists(data.title);
+      if (existsCheck.exists && existsCheck.book) {
+        toast.info("Book with same title already exists");
+        form.reset();
+        //redirect to existing book page
+        router.push(`/book/${existsCheck.book.slug}`);
+        return;
+      }
+      const fileTitle = data.title.replace(/\s+/g, "-").toLowerCase();
+      const pdfFile = data.pdf;
+
+      const parsedPDF = await parsePDFFile(pdfFile);
+
+      if (parsedPDF.content.length == 0) {
+        toast.error("Failed to parse PDF, please try again");
+        return;
+      }
+
+      const uploadedPdfBlob = await upload(fileTitle, pdfFile, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        contentType: "application/pdf",
+      });
+
+      let coverUrl: string;
+
+      if (data.coverImage) {
+        const coverFile = data.coverImage;
+        const uploadedCoverBlob = await upload(
+          `${fileTitle}_cover.png`,
+          coverFile,
+          {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            contentType: coverFile.type,
+          },
+        );
+        coverUrl = uploadedCoverBlob.url;
+      } else {
+        // if user hasn't uploaded a cover image, use the default cover image
+        const response = await fetch(parsedPDF.cover);
+        const blob = await response.blob();
+        const uploadedCoverBlob = await upload(`${fileTitle}_cover.png`, blob, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+          contentType: "image/png",
+        });
+        coverUrl = uploadedCoverBlob.url;
+      }
+
+      const book = await createBook({
+        title: data.title,
+        author: data.author,
+        persona: data.voice,
+        fileURL: uploadedPdfBlob.url,
+        fileBlobKey: uploadedPdfBlob.pathname,
+        coverURL: coverUrl,
+        fileSize: pdfFile.size,
+      });
+      if (!book.success) throw new Error("Failed to create book");
+
+      if (book.alreadyExists) {
+        toast.info("Book with same title already exists");
+        form.reset();
+        //redirect to existing book page
+        router.push(`/book/${existsCheck.book.slug}`);
+        return;
+      }
+      const segments = await saveBookSegments(
+        book.data._id,
+        parsedPDF.content,
+      );
+
+      if (!segments.success) {
+        toast.error("Failed to save book segments");
+        throw new Error("Failed to save book segments");
+      }
+
+      form.reset();
+      router.push("/");
     } catch (error) {
       console.error("Upload failed:", error);
+      toast.error("Upload failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +179,8 @@ const UploadForm = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           field.onChange(undefined);
-                          if (pdfInputRef.current) pdfInputRef.current.value = "";
+                          if (pdfInputRef.current)
+                            pdfInputRef.current.value = "";
                         }}
                       >
                         <X className="w-5 h-5" />
@@ -101,13 +190,15 @@ const UploadForm = () => {
                     <div
                       className="upload-dropzone"
                       onClick={() => pdfInputRef.current?.click()}
-                     
-
                       role="button"
-                     >
+                    >
                       <Upload className="upload-dropzone-icon" />
-                      <p className="upload-dropzone-text">Click to upload PDF</p>
-                      <p className="upload-dropzone-hint">PDF file (max 50MB)</p>
+                      <p className="upload-dropzone-text">
+                        Click to upload PDF
+                      </p>
+                      <p className="upload-dropzone-hint">
+                        PDF file (max 50MB)
+                      </p>
                     </div>
                   )}
                   <FormMessage />
@@ -144,13 +235,10 @@ const UploadForm = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           field.onChange(undefined);
-                          if (coverInputRef.current) coverInputRef.current.value = "";
-
+                          if (coverInputRef.current)
+                            coverInputRef.current.value = "";
                         }}
-                      
-
-                      role="button"
-                
+                        role="button"
                       >
                         <X className="w-5 h-5" />
                       </button>
