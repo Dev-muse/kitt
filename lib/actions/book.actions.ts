@@ -147,6 +147,32 @@ export const checkBookExists = async (title: string) => {
   }
 };
 
+export const getBookBySlug = async (slug: string) => {
+  try {
+    await connectToDatabase();
+
+    const book = await Book.findOne({ slug }).lean();
+
+    if (!book) {
+      return { success: false, error: "Book not found" };
+    }
+
+    return {
+      success: true,
+      data: serializeData(book),
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Error getting book by slug", message);
+
+    return {
+      success: false,
+      error: message,
+    };
+  }
+};
+
 export const getAllBooks = async () => {
   try {
     await connectToDatabase();
