@@ -4,9 +4,9 @@ import BookSegment from "@/database/models/book-segments.model";
 import Book from "@/database/models/books.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
-import { escapeRegex, generateSlug, serializeData } from "../utils";
 import { auth } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
+import { escapeRegex, generateSlug, serializeData } from "../utils";
 
 export const createBook = async (data: CreateBook) => {
   try {
@@ -228,6 +228,14 @@ export const searchBookSegments = async (
     // Fallback: regex search matching ANY keyword
     if (segments.length === 0) {
       const keywords = query.split(/\s+/).filter((k) => k.length > 2);
+
+      if (keywords.length == 0) {
+        return {
+          success: true,
+          data: [],
+        };
+      }
+
       const pattern = keywords.map(escapeRegex).join("|");
 
       segments = await BookSegment.find({
