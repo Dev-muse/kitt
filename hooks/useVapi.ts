@@ -104,10 +104,19 @@ export function useVapi(book: IBook) {
 
                 // End session tracking
                 if (sessionIdRef.current) {
-                    endVoiceSession(sessionIdRef.current, durationRef.current).catch((err) =>
-                        console.error('Failed to end voice session:', err),
-                    );
-                    sessionIdRef.current = null;
+                    const sessionId = sessionIdRef.current;
+                    const duration = durationRef.current;
+                    endVoiceSession(sessionId, duration)
+                        .then((result) => {
+                            if (result.success) {
+                                sessionIdRef.current = null;
+                            } else {
+                                console.error('Failed to end voice session:', result.error);
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Failed to end voice session:', err);
+                        });
                 }
 
                 startTimeRef.current = null;
@@ -182,10 +191,19 @@ export function useVapi(book: IBook) {
 
                 // End session tracking on error
                 if (sessionIdRef.current) {
-                    endVoiceSession(sessionIdRef.current, durationRef.current).catch((err) =>
-                        console.error('Failed to end voice session on error:', err),
-                    );
-                    sessionIdRef.current = null;
+                    const sessionId = sessionIdRef.current;
+                    const duration = durationRef.current;
+                    endVoiceSession(sessionId, duration)
+                        .then((result) => {
+                            if (result.success) {
+                                sessionIdRef.current = null;
+                            } else {
+                                console.error('Failed to end voice session on error:', result.error);
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Failed to end voice session on error:', err);
+                        });
                 }
 
                 // Show user-friendly error message
@@ -211,10 +229,19 @@ export function useVapi(book: IBook) {
             // End active session on unmount
             if (sessionIdRef.current) {
                 getVapi().stop();
-                endVoiceSession(sessionIdRef.current, durationRef.current).catch((err) =>
-                    console.error('Failed to end voice session on unmount:', err),
-                );
-                sessionIdRef.current = null;
+                const sessionId = sessionIdRef.current;
+                const duration = durationRef.current;
+                endVoiceSession(sessionId, duration)
+                    .then((result) => {
+                        if (result.success) {
+                            sessionIdRef.current = null;
+                        } else {
+                            console.error('Failed to end voice session on unmount:', result.error);
+                        }
+                    })
+                    .catch((err) => {
+                        console.error('Failed to end voice session on unmount:', err);
+                    });
             }
             // Cleanup handlers
             Object.entries(handlers).forEach(([event, handler]) => {
