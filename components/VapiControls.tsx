@@ -10,7 +10,7 @@ const VapiControls = ({ book }: { book: IBook }) => {
   const {
     start,
     stop,
-    clearErrors,
+    clearError,
     status,
     isActive,
     messages,
