@@ -126,7 +126,7 @@ NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 MONGODB_URI=your_mongodb_connection_string
 
 # Vapi AI
-NEXT_VAPI_API_KEY=your_vapi_public_key
+NEXT_PUBLIC_VAPI_API_KEY=your_vapi_public_key
 
 # Vercel Blob
 BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
