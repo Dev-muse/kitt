@@ -4,10 +4,9 @@ import BookSegment from "@/database/models/book-segments.model";
 import Book from "@/database/models/books.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
-import { escapeRegex, generateSlug, serializeData } from "../utils";
 import { auth } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
-import { success } from "zod";
+import { escapeRegex, generateSlug, serializeData } from "../utils";
 
 export const createBook = async (data: CreateBook) => {
   try {
