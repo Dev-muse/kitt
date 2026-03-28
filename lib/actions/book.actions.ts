@@ -7,6 +7,7 @@ import { CreateBook, TextSegment } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
 import { escapeRegex, generateSlug, serializeData } from "../utils";
+import { revalidatePath } from "next/cache";
 
 export const createBook = async (data: CreateBook) => {
   try {
@@ -179,6 +180,8 @@ export const getAllBooks = async () => {
     await connectToDatabase();
 
     const books = await Book.find().sort({ createdAt: -1 }).lean();
+
+    revalidatePath("/");
 
     return {
       success: true,
