@@ -3,7 +3,7 @@
 import VoiceSession from "@/database/models/voice-sessions.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { EndSessionResult, StartSessionResult } from "@/types";
-import { getCurrentBillPeriodStart } from "../subscription-contants";
+import { getCurrentBillPeriodStart } from "../subscription-constants";
 
 export const startVoiceSession = async (
   clerkId: string,
