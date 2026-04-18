@@ -174,6 +174,4 @@ This project is private and not currently licensed for public use.
 </div>
 ```
 
----
-
-> **Note:** The logo is referenced from `./public/logo.png`. If you'd also like to use the full SVG logo (`./assets/logo-full.svg`) for a crisper render at larger sizes in the README header, simply swap the `src` in the `<img>` tag to `./assets/logo-full.svg`.
+ 
