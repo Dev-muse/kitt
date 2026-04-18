@@ -7,7 +7,7 @@ import { CreateBook, TextSegment } from "@/types";
 import { auth } from "@clerk/nextjs/server";
 import mongoose from "mongoose";
 import { escapeRegex, generateSlug, serializeData } from "../utils";
-import { revalidatePath } from "next/cache";
+import { getUserPlanInfo } from "../subscription-server";
 
 export const createBook = async (data: CreateBook) => {
   try {
@@ -28,7 +28,17 @@ export const createBook = async (data: CreateBook) => {
       };
     }
 
-    // TODO: Check subscription limits before creating a book
+    // Check subscription limits before creating a book
+    const { plan, limits } = await getUserPlanInfo();
+    const userBookCount = await Book.countDocuments({ clerkId: userId });
+
+    if (userBookCount >= limits.maxBooks) {
+      return {
+        success: false,
+        error: `Your ${plan} plan allows a maximum of ${limits.maxBooks} book${limits.maxBooks === 1 ? "" : "s"}. Please upgrade your plan to add more books.`,
+        isBillingError: true,
+      };
+    }
 
     const book = await Book.create({
       ...data,
@@ -180,8 +190,6 @@ export const getAllBooks = async () => {
     await connectToDatabase();
 
     const books = await Book.find().sort({ createdAt: -1 }).lean();
-
-    revalidatePath("/");
 
     return {
       success: true,

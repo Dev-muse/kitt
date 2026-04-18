@@ -18,6 +18,7 @@ import {
 const navItems = [
   { id: 1, Label: "Library", href: "/" },
   { id: 2, Label: "Add New", href: "/books/new" },
+  { id: 3, Label: "Pricing", href: "/subscriptions" },
 ];
 
 
